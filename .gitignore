@@ -1,0 +1,11 @@
+# Ignore secrets
+.env
+
+# Ignore Airflow logs
+logs/
+
+# Ignore any local Python cache
+__pycache__/
+
+# Ignore database volume if inside project
+pgdata/
