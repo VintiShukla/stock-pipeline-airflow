@@ -1,0 +1,39 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:15
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: "${POSTGRES_USER:-stock_user}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-stock_pass}"
+      POSTGRES_DB: "${POSTGRES_DB:-stock_db}"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  airflow:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      ALPHAVANTAGE_API_KEY: "${ALPHAVANTAGE_API_KEY}"
+      STOCK_DB_HOST: "postgres"
+      STOCK_DB_PORT: "5432"
+      STOCK_DB_NAME: "${POSTGRES_DB:-stock_db}"
+      STOCK_DB_USER: "${POSTGRES_USER:-stock_user}"
+      STOCK_DB_PASSWORD: "${POSTGRES_PASSWORD:-stock_pass}"
+      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    command: bash -c "airflow db init && airflow users create --username admin --firstname Admin --lastname User --role Admin --email admin@example.com --password admin || true && airflow standalone"
+    restart: unless-stopped
+
+volumes:
+  pgdata:
